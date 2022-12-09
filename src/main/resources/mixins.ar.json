@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.maydaymemory.ar.mixin",
+  "refmap": "mixins.ar.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "client.PlayerRendererMixin",
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

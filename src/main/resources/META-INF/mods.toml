@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[43,)"
+license="GPL3"
+
+[[mods]]
+modId="advancedrenderer"
+version="0.1.0"
+displayName="Advanced Renderer"
+updateJSONURL=""
+displayURL=""
+authors="MaydayMemory; Arcomit"
+description='''
+'''
+
+[[dependencies.advancedrenderer]]
+modId="forge"
+mandatory=true
+versionRange="[43,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.advancedrenderer]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.19.1, 1.19.2)"
+ordering="NONE"
+side="BOTH"

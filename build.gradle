@@ -1,0 +1,175 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.spongepowered:mixingradle:0.7.+'
+    }
+}
+
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+apply plugin: 'org.spongepowered.mixin'
+
+version = "0.1.0.001-1.19.2"
+group = "com.maydaymemory"
+archivesBaseName = "ar"
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
+minecraft {
+    mappings channel: 'parchment', version: '2022.11.27-1.19.2'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', 'tac'
+
+            mods {
+                tac {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', 'examplemod'
+
+            mods {
+                tac {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        gameTestServer {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', 'examplemod'
+
+            mods {
+                tac {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                tac {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+project.ext.lwjglVersion = "3.3.1"
+project.ext.lwjglNatives = "natives-windows"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.19.2-43.1.7'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+    implementation "org.lwjgl:lwjgl-assimp"
+    runtimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
+}
+
+task copyLibs(type: Copy){
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.compileClasspath.findAll {
+            it.name.contains('lwjgl-assimp')
+        }.collect {
+            zipTree it
+        }
+    }
+    from {
+        configurations.runtimeClasspath.findAll {
+            it.name.contains('lwjgl-assimp') && it.name.contains(project.ext.lwjglNatives)
+        }.collect {
+            zipTree it
+        }
+    }
+    into "$buildDir/classes/java/main"
+}
+
+classes{
+    dependsOn(copyLibs)
+}
+
+mixin {
+    add sourceSets.main, 'mixins.ar.refmap.json'
+    config 'mixins.ar.json'
+    debug.verbose = true
+    debug.export = true
+}
+
+jar {
+    manifest {
+        attributes([
+                "Specification-Title": "Advanced Renderer",
+                "Specification-Vendor": "MaydayMemory, Arcomit",
+                "Specification-Version": "0.1.0",
+                "Implementation-Title": "Advanced Renderer",
+                "Implementation-Version": project.version,
+                "Implementation-Vendor" : "MaydayMemory, Arcomit",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "MixinConfigs": "mixins.ar.json"
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
